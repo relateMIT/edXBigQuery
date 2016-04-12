@@ -1,5 +1,6 @@
 # I added this commments
-
+# here 1
+# here 3
 ##################################################################################
 ####### This is the R script for extracting information for 8.01r 2015 Fall course
 ##################################################################################
@@ -21,7 +22,7 @@ course_item <- fromJSON(sprintf("[%s]", paste(readLines("D:\\Dropbox (MIT)\\BigQ
 dim(course_item)  # 634 36, so there are 634 items
 item_nid <- course_item$item_nid
 item_id <- course_item$item_id
-
+# here2
 ### read 'person_item.json' to get person-item information
 person_item <- fromJSON(sprintf("[%s]", paste(readLines("D:\\Dropbox (MIT)\\BigQueryData\\data\\MITx__8_01r_2__2015_Fall\\person_item.json"), collapse=",")))
 
