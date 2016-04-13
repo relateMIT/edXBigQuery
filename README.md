@@ -1,8 +1,8 @@
-This is a MIT RELATE group's repository containing codes useful for analyzing edX BigQuery tables
+### This is a MIT RELATE group's repository containing codes useful for analyzing edX BigQuery tables
 
 ###### %%% Description for codes in "codes for log files from edX Big Query" folder %%%
 
-1. createResponseMatrix.R: create three kinds of resposne matrix from Big Query tables. 
+- createResponseMatrix.R: create three kinds of resposne matrix from Big Query tables. 
 
 
 
