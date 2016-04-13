@@ -19,7 +19,7 @@ course_item <- fromJSON(sprintf("[%s]", paste(readLines("D:\\Dropbox (MIT)\\BigQ
 dim(course_item)  # 634 36, so there are 634 items
 item_nid <- course_item$item_nid
 item_id <- course_item$item_id
-# here2
+
 ### read 'person_item.json' to get person-item information
 person_item <- fromJSON(sprintf("[%s]", paste(readLines("D:\\Dropbox (MIT)\\BigQueryData\\data\\MITx__8_01r_2__2015_Fall\\person_item.json"), collapse=",")))
 
@@ -63,7 +63,10 @@ write.csv(responseBin, "responseBin.csv")
 write.csv(responseMA, "responseMA.csv")
 write.csv(responseMAneg, "responseMAneg.csv")
 
-### check some basic statistics
+##################################################################################
+########################## check some basic statistics ###########################
+##################################################################################
+
 # overall missing percentage 
 missingOverall <- sum(is.na(as.vector(responseBin)))/length(as.vector(responseBin))   
 missingOverall  # 0.62
