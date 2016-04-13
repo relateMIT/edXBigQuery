@@ -63,8 +63,6 @@ write.csv(responseBin, "responseBin.csv")
 write.csv(responseMA, "responseMA.csv")
 write.csv(responseMAneg, "responseMAneg.csv")
 
-
-
 ### check some basic statistics
 # overall missing percentage 
 missingOverall <- sum(is.na(as.vector(responseBin)))/length(as.vector(responseBin))   
