@@ -93,20 +93,3 @@ br = seq(0,1,by=0.1)
 ranges = paste(br[-11], br[-1], sep=" - ")
 freq = hist(missingItem, breaks = seq(0,1,0.1), plot=TRUE)
 cbind(range=ranges, frequency=freq$counts)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
