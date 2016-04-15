@@ -1,5 +1,5 @@
 ##### This is a MIT RELATE group's repository containing codes useful for analyzing edX BigQuery tables
-<span style="color: green"> Please provide a short description about the code when you upload your codes </span>
+###### Please provide a short description about the code when you upload your codes 
 ----------------
 
 ###### %%% Description for codes in "codes for log files from edX Big Query" folder %%%
