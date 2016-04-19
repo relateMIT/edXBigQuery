@@ -14,33 +14,37 @@ ReadJsonTable <- function(filename){
 }
 
 
-#This function gets problems in a given course unit (chapter/sequential/vertical).
-#Takes three parameters: (names, courseItem, courseAxis).
-#"names" is a list in the order of {[chapters],[sequentials],[verticals]}
-#"courseAxis" is the course_axis table (required for checking if a vertical contains a splittest)
-#"courseItem" is the course_item table (required).
+# This function gets problems in a given course unit (chapter/sequential/vertical).
+# Takes five parameters: (chapterNames, seqNames, vertNames, courseItem, courseAxis).
+# chapter, sequential and verticals can be vectors, they are the display names of chapters, sequentials and verticals in the course.
+# Display names are used because that is used in the course.items table 
+# The search is conducted in hierarchical order, so the verticals must be contained in the sequentials and the sequenatials in chapters.
+# "courseAxis" is the course_axis table (required for checking if a vertical contains a splittest)
+# "courseItem" is the course_item table (required).
 
-GetProblems <- function(names, courseItem = course.item, courseAxis = course.axis){
+GetProblems <- function(chapterNames = "", seqNames = "", vertNames = "", courseItem = course.item, courseAxis = course.axis){
   #Note: checking for validity of parameters and error messages are not available right now.
   d <- courseItem
   #Find items in chapter if chapter is specified
-  if (!(names[1] == "")){
-    d <- d[ d$chapter_name %in% names[1], ]
+  if (!(chapterNames[1] == "")){
+    #make everything case insensitive
+    d <- d[ toupper(d$chapter_name) %in% toupper(chapterNames), ]
   }
   #Find items in sequentials
-  if(!(names[2] == "")){
-    d <- d[ d$section_name %in% names[2], ]
+  if(!(seqNames[1] == "")){
+    d <- d[ toupper(d$section_name) %in% toupper(seqNames), ]
   }
   
   #If a vertical name is supplied, then check the courseAxis if it contains splittest. This is because the splittest vertical name is not displayed
-  
-  if (!(names[3] == "")){
+  #Note: vertical names are not displayed! Have to get urls from the beginning!
+  if (!(vertNames[1] == "")){
     #get all verticals in split, both name and URL name
     verticalInSplit <- courseAxis[ courseAxis$category == "vertical" & courseAxis$is_split == TRUE ,c("name", "parent")]
     #create a dictionary for vertical name and vertical url_name
     allVerticals <- courseAxis[ courseAxis$category == "vertical", c("name", "url_name")]
     #get the vertical URLs for all verticals specified, in the order of the vertical names given.
-    verticalURLs <- allVerticals$url_name[match(names[3], allVerticals$name)]
+    #make everything upper case
+    verticalURLs <- allVerticals$url_name[match(toupper(vertNames), toupper(allVerticals$name))]
     
     #find if any verticals given are parent URLs
     IsParentVertical <- verticalURLs %in% verticalInSplit$parent
@@ -50,9 +54,9 @@ GetProblems <- function(names, courseItem = course.item, courseAxis = course.axi
       splitVerticalsNames <- verticalInSplit$name[ verticalInSplit$parent %in% verticalURLs[IsParentVertical]]
       
       #remove parent vertical names, and append the corresponding split vertical names.
-      names[3] <- c(names[3][!IsParentVertical],splitVerticalsNames)
+      vertNames <- c(vertNames[!IsParentVertical],splitVerticalsNames)
     }
-    d <- d[ d$vertical_name %in% names[3], ]
+    d <- d[ toupper(d$vertical_name) %in% toupper(vertNames), ]
   }
   #If the vertical is the parent of a split test, delete the vertical from the list, and append the list with the split vertical names
   return(d)
