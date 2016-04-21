@@ -15,8 +15,9 @@ ReadJsonTable <- function(filename){
 
 
 # This function gets problems in a given course unit (chapter/sequential/vertical).
-# Takes five parameters: (chapterNames, seqNames, vertNames, courseItem, courseAxis).
-# chapter, sequential and verticals can be vectors, they are the display names of chapters, sequentials and verticals in the course.
+# Takes five parameters: (chapterNames, seqNames, vertNum, courseItem, courseAxis).
+# chapter, sequentials can be vectors, they are the display names of chapters, sequentials and verticals in the course.
+# vertNum is the vertical number in the sequence, can be a vector. Seuqnce name is required for specifying vertical.
 # Display names are used because that is used in the course.items table 
 # The search is conducted in hierarchical order, so the verticals must be contained in the sequentials and the sequenatials in chapters.
 # "courseAxis" is the course_axis table (required for checking if a vertical contains a splittest)
@@ -36,7 +37,16 @@ GetProblems <- function(chapterNames = "", seqNames = "", vertNames = "", course
   }
   
   #If a vertical name is supplied, then check the courseAxis if it contains splittest. This is because the splittest vertical name is not displayed
-  #Note: vertical names are not displayed! Have to get urls from the beginning!
+  #Note: The following needs to be re-coded. 
+  # 1. Check if sequence name is provided and only one sequential is provided
+  # 2. Get sequential path from sequential name
+  # 3. Construct a list of vertical paths from the given sequential paths
+  # 4. get vertical url names from vertical paths
+  # 5. check if any of the vertical urls are parents, if yes, replace with child vertical urls.
+  # 6. get vertical names based on vertical urls.
+  # 7. proceed as before with vertical url list.
+  
+  
   if (!(vertNames[1] == "")){
     #get all verticals in split, both name and URL name
     verticalInSplit <- courseAxis[ courseAxis$category == "vertical" & courseAxis$is_split == TRUE ,c("name", "parent")]
