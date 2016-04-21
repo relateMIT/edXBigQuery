@@ -11,10 +11,18 @@ GetCorrectWhen.OneProblem:  Given one problem id, a list of student ids, and spe
 
 GetWhen.nthAttempt: Given a list of problems and a list of students, return a dataframe containing the time at which the nth attempt is made. 
 
-(Testing Github)
-
 ===============Analysis Tools Currently Under Development=====================
 
 GetProblems: gets problems in a given course unit (chapter(s)/sequential(s)/vertical(s)).Takes three parameters: (names, courseItem, courseAxis)."names" is a list in the order of {[chapters],[sequentials],[verticals]}, "courseAxis" is the course_axis table (required for checking if a vertical contains a splittest), "courseItem" is the course_item table (required).
 
 This is now ready to be debugged.
+
+Test cases:
+   
+Problem 5:57 PM 4/19/2016 : vertical display name is not displayed on the screen. Have to find a way to use the vertical number in the sequential.
+   
+   1. Chapter (check)
+   2. chapter + sequential with no split test (checked)
+   3. sequential with split test (checked)
+   4. vertical w/o split (checked)
+   5. vertical with split (checked)
