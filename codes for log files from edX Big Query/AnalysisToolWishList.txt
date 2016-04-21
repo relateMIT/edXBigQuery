@@ -22,7 +22,7 @@ Test cases:
 Problem 5:57 PM 4/19/2016 : vertical display name is not displayed on the screen. Have to find a way to use the vertical number in the sequential.
    
    1. Chapter (check)
-   2. chapter + sequential with no split test (checking)
-   3. sequential with split test
-   4. vertical w/o split
-   5. vertical with split
+   2. chapter + sequential with no split test (checked)
+   3. sequential with split test (checked)
+   4. vertical w/o split (checked)
+   5. vertical with split (checked)

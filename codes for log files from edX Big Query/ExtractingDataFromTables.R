@@ -14,16 +14,16 @@ ReadJsonTable <- function(filename){
 }
 
 
-# This function gets problems in a given course unit (chapter/sequential/vertical).
+# This function gets problems (items/inputfields) in a given course unit (chapter/sequential/vertical).
 # Takes five parameters: (chapterNames, seqNames, vertNum, courseItem, courseAxis).
-# chapter, sequentials can be vectors, they are the display names of chapters, sequentials and verticals in the course.
-# vertNum is the vertical number in the sequence, can be a vector. Seuqnce name is required for specifying vertical.
+# chapter, sequentials can be vectors, they are the display names of chapters and sequentials in the course.
+# vertNum is the vertical number in the sequence, can be a vector. A single seuqnce name is required for specifying vertical.
 # Display names are used because that is used in the course.items table 
-# The search is conducted in hierarchical order, so the verticals must be contained in the sequentials and the sequenatials in chapters.
+# If both chapter name and sequential names are specified, the sequential must be contained in the chapter
 # "courseAxis" is the course_axis table (required for checking if a vertical contains a splittest)
 # "courseItem" is the course_item table (required).
 
-GetProblems <- function(chapterNames = "", seqNames = "", vertNames = "", courseItem = course.item, courseAxis = course.axis){
+GetProblems <- function(chapterNames = "", seqNames = "", vertNum = "", courseItem = course.item, courseAxis = course.axis){
   #Note: checking for validity of parameters and error messages are not available right now.
   d <- courseItem
   #Find items in chapter if chapter is specified
@@ -36,39 +36,50 @@ GetProblems <- function(chapterNames = "", seqNames = "", vertNames = "", course
     d <- d[ toupper(d$section_name) %in% toupper(seqNames), ]
   }
   
-  #If a vertical name is supplied, then check the courseAxis if it contains splittest. This is because the splittest vertical name is not displayed
-  #Note: The following needs to be re-coded. 
-  # 1. Check if sequence name is provided and only one sequential is provided
-  # 2. Get sequential path from sequential name
-  # 3. Construct a list of vertical paths from the given sequential paths
-  # 4. get vertical url names from vertical paths
-  # 5. check if any of the vertical urls are parents, if yes, replace with child vertical urls.
-  # 6. get vertical names based on vertical urls.
-  # 7. proceed as before with vertical url list.
   
-  
-  if (!(vertNames[1] == "")){
+  if (!(vertNum[1] == "")){
+    # 1. Check if sequence name is provided and only one sequential is provided
+    if (seqNames[1] == ""){
+      print("Error: Must specify one sequential name to access specific verticals")
+      return()
+    } else {
+      if (length(seqNames) > 1) {
+        print("Error: Can only specify one sequential name at a time")
+        return()
+      }
+    }
+    # 2. Get sequential path from sequential name
+    seqPath <- courseAxis[ courseAxis$name == seqNames ,"path"]
+    # 3. Construct a list of vertical paths from the given sequential paths
+    vertPath <- sapply(X = vertNum, FUN = function(x,y){paste0(y,"/",x)}, y = seqPath)
+    
+    #create a dictionary for vertical path, vertical url_name, vercal URl names
+    allVerticals <- courseAxis[ courseAxis$category == "vertical", c("path", "url_name", "name")]
+    #get the vertical URLs and names for all verticals specified, in the order of the vertical paths given.
+    verticalURLsandNames <- allVerticals[match(vertPath, allVerticals$path), c("url_name", "name")]
+    
+    #get all split tests, URL and parent
+    splitTest <- courseAxis[ courseAxis$category == "split_test", c("url_name", "parent")]
+    
     #get all verticals in split, both name and URL name
     verticalInSplit <- courseAxis[ courseAxis$category == "vertical" & courseAxis$is_split == TRUE ,c("name", "parent")]
-    #create a dictionary for vertical name and vertical url_name
-    allVerticals <- courseAxis[ courseAxis$category == "vertical", c("name", "url_name")]
-    #get the vertical URLs for all verticals specified, in the order of the vertical names given.
-    #make everything upper case
-    verticalURLs <- allVerticals$url_name[match(toupper(vertNames), toupper(allVerticals$name))]
     
     #find if any verticals given are parent URLs
-    IsParentVertical <- verticalURLs %in% verticalInSplit$parent
+    IsParentVertical <- verticalURLsandNames$url_name %in% splitTest$parent
     #if some of the verticals are parent verticals
     if (sum(IsParentVertical)>0) {
+      #Find the split URL names from parent vertical
+      splitURLInVertical <- splitTest$url_name[splitTest$parent %in% verticalURLsandNames$url_name]
       #For every vertical url that is a parent vertical, return the name of its child vertical
-      splitVerticalsNames <- verticalInSplit$name[ verticalInSplit$parent %in% verticalURLs[IsParentVertical]]
+      splitVerticalsNames <- verticalInSplit$name[ verticalInSplit$parent %in% splitURLInVertical]
       
       #remove parent vertical names, and append the corresponding split vertical names.
-      vertNames <- c(vertNames[!IsParentVertical],splitVerticalsNames)
+      vertNames <- c(verticalURLsandNames[!IsParentVertical,"name"],splitVerticalsNames)
+    } else {
+      vertNames <- verticalURLsandNames$name
     }
-    d <- d[ toupper(d$vertical_name) %in% toupper(vertNames), ]
+    d <- d[ d$vertical_name %in% vertNames, ]
   }
-  #If the vertical is the parent of a split test, delete the vertical from the list, and append the list with the split vertical names
   return(d)
 }
 
