@@ -3,26 +3,14 @@
 
 ================Proposed Analysis Tools Waiting To Be Developed=================
 
-GetResources: Gets one or more types of resource (except for a problem) in a given course unit (chapter/sequential/vertical). Takes three parameters: (names, types, courseAxis). "names" is a list in the order of {[chapter], [sequential],[vertical]}, and "types" is a list that contains all the resource types that are being extracted, such as {"video", "html"}. courseAxis is the courseAxis file. 
+GetWhen.nthAttempt: Given a list of problems and a list of students, return a dataframe containing the time at which the nth attempt is made. (Note: whether the attempt is correct can be retrieved from the response matrix.)
 
-GetCorrectWhen.OneStudent: Given one problem id and one student id, return a dataframe containing all the attempts the student made on this problem, whether it is correct or not and when the attempt was made.
+
+GetCorrectWhen.OneStudent: Given one problem id and one student id, return a dataframe containing all the attempts the student made on this problem, whether it is correct or not and when each attempt was made.
 
 GetCorrectWhen.OneProblem:  Given one problem id, a list of student ids, and specify the nth attempt, return a dataframe containing when did each student make the nth attempt on the problem, and whether the attempt is correct or not.
 
-GetWhen.nthAttempt: Given a list of problems and a list of students, return a dataframe containing the time at which the nth attempt is made. 
 
+GetResources: Gets one or more types of resource (except for a problem) in a given course unit (chapter/sequential/vertical). Takes parameters: (chapter, sequence, vertical, type, courseAxis). chapter and sequences are display names, and vertical is the vertical number, and "types" is a list that contains all the resource types that are being extracted, such as {"video", "html"}. courseAxis is the courseAxis file. 
 ===============Analysis Tools Currently Under Development=====================
 
-GetProblems: gets problems in a given course unit (chapter(s)/sequential(s)/vertical(s)).Takes three parameters: (names, courseItem, courseAxis)."names" is a list in the order of {[chapters],[sequentials],[verticals]}, "courseAxis" is the course_axis table (required for checking if a vertical contains a splittest), "courseItem" is the course_item table (required).
-
-This is now ready to be debugged.
-
-Test cases:
-   
-Problem 5:57 PM 4/19/2016 : vertical display name is not displayed on the screen. Have to find a way to use the vertical number in the sequential.
-   
-   1. Chapter (check)
-   2. chapter + sequential with no split test (checked)
-   3. sequential with split test (checked)
-   4. vertical w/o split (checked)
-   5. vertical with split (checked)

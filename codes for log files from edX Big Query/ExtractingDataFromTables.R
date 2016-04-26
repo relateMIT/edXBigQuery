@@ -6,8 +6,10 @@
 ReadJsonTable <- function(filename){
   #load jsonlite if it is not already loaded
   if(!("jsonlite" %in% installed.packages()[,1])){
-    library(jsonlite)
+    print("Required package jsonlite is missing.")
+    return()
   }
+  library(jsonlite)
   #read from file
   d <- fromJSON(sprintf("[%s]", paste(readLines(filename), collapse=",")))
   return(d)
