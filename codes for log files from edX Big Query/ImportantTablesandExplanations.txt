@@ -25,13 +25,7 @@ video_stats: (what's the difference between videos_viewed and videos watched?) T
 
 video_stats_day: I suspect that this is the day in which the student first accessed the video
 
-
+person_course: A fairly silly thing is that many of the columns containing personal information are blank, such as roll.
 
 
 ##################################################################
-Chen's temporary note:
-(These are students' interactions with problems with time stamp. Exactly what I needed.)
-
-problem_analysis:
-
-problem_check:
