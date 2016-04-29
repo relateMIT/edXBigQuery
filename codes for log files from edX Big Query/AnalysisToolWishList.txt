@@ -1,5 +1,9 @@
 %%%%Currently used for documenting development of R Tools%%%%%%%%%
+================High Priority Tools====================================
 
+UserinSplit: Gets the group assignment info for each student.
+
+(Video first access time)
 
 ================Proposed Analysis Tools Waiting To Be Developed=================
 
@@ -14,8 +18,8 @@ GetCorrectWhen.OneProblem:  Given one problem id, a list of student ids, and spe
 GetResources: Gets one or more types of resource (except for a problem) in a given course unit (chapter/sequential/vertical). Takes parameters: (chapter, sequence, vertical, type, courseAxis). chapter and sequences are display names, and vertical is the vertical number, and "types" is a list that contains all the resource types that are being extracted, such as {"video", "html"}. courseAxis is the courseAxis file. 
 ===============Analysis Tools Currently Under Development=====================
 
-CalcFinished.Percentage: Given a list of problems (can either specify a certain identifying such as "problem_url", or can accept a data frame.) and a list of students (student_nid), output the percentage of attempted problems for each student, i.e., what percentage of the assignment did each student finish. This is useful for questions such as "for those who finished x% on the homeowork, how many...."
+CalcAssignmentCompletion: Given a list of problems (can either specify a certain identifier such as "problem_url", or can accept a data frame.) and a list of students (student_nid), output the total number of problems, attempted problems, and correct problems for each student. This is useful for questions such as "for those who finished x% on the homeowork, how many...."
 	
-	Difficulty: If the problem list contains problems that belong to AB experiment, then each student can only complete a fraction of the problems that they actually see. 
+	Difficulty: If the problem list contains problems that belong to AB experiment, then each student can only complete a fraction of the problems that they actually see. Need to determine the group assignment status of each student, then extract the problems that belonged to that group. Will develop that capability once the group assignment info can be extracted. 
 	
  

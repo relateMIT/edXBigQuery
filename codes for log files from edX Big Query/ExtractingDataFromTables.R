@@ -96,3 +96,11 @@ EmailtoUsername <- function(emailList){
   }
   rslt <- sapply(X = emailList, FUN = ExtractUsername, USE.NAMES = FALSE)
 }
+
+CalcAssignmentCompletion <- function(problems, students, studentInfo = person.course, rm = somethingThatdoesntExist) {
+  tryCatch(class(rm) == "matrix", ... = )
+  print("Note: This function does not yet handle AB experiments properly")
+  
+}
+
+
