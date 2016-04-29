@@ -16,26 +16,30 @@ ReadJsonTable <- function(filename){
 }
 
 
-# This function gets problems (items/inputfields) in a given course unit (chapter/sequential/vertical).
-# Takes five parameters: (chapterNames, seqNames, vertNum, courseItem, courseAxis).
-# chapter, sequentials can be vectors, they are the display names of chapters and sequentials in the course.
-# vertNum is the vertical number in the sequence, can be a vector. A single seuqnce name is required for specifying vertical.
-# Display names are used because that is used in the course.items table 
-# If both chapter name and sequential names are specified, the sequential must be contained in the chapter
-# "courseAxis" is the course_axis table (required for checking if a vertical contains a splittest)
-# "courseItem" is the course_item table (required).
 
 GetProblems <- function(chapterNames = "", seqNames = "", vertNum = "", courseItem = course.item, courseAxis = course.axis){
+  # This function gets problems (items/inputfields) in a given course unit (chapter/sequential/vertical).
+  # Takes five parameters: (chapterNames, seqNames, vertNum, courseItem, courseAxis).
+  # chapter, sequentials can be vectors, they are the display names of chapters and sequentials in the course.
+  # vertNum is the vertical number in the sequence, can be a vector. A single seuqnce name is required for specifying vertical.
+  # Display names are used because that is used in the course.items table 
+  # If both chapter name and sequential names are specified, the sequential must be contained in the chapter
+  # "courseAxis" is the course_axis table (required for checking if a vertical contains a splittest)
+  # "courseItem" is the course_item table (required).
+  
+  
+  #function for trimming trailing white space
+  trim.trailing <- function (x) sub("\\s+$", "", x)
   #Note: checking for validity of parameters and error messages are not available right now.
   d <- courseItem
   #Find items in chapter if chapter is specified
   if (!(chapterNames[1] == "")){
     #make everything case insensitive
-    d <- d[ toupper(d$chapter_name) %in% toupper(chapterNames), ]
+    d <- d[ trim.trailing(toupper(d$chapter_name)) %in% trim.trailing(toupper(chapterNames)), ]
   }
   #Find items in sequentials
   if(!(seqNames[1] == "")){
-    d <- d[ toupper(d$section_name) %in% toupper(seqNames), ]
+    d <- d[ trim.trailing(toupper(d$section_name)) %in% trim.trailing(toupper(seqNames)), ]
   }
   
   
@@ -51,7 +55,7 @@ GetProblems <- function(chapterNames = "", seqNames = "", vertNum = "", courseIt
       }
     }
     # 2. Get sequential path from sequential name
-    seqPath <- courseAxis[ courseAxis$name == seqNames ,"path"]
+    seqPath <- courseAxis[ trim.trailing(courseAxis$name) == trim.trailing(seqNames) ,"path"]
     # 3. Construct a list of vertical paths from the given sequential paths
     vertPath <- sapply(X = vertNum, FUN = function(x,y){paste0(y,"/",x)}, y = seqPath)
     
@@ -85,4 +89,10 @@ GetProblems <- function(chapterNames = "", seqNames = "", vertNum = "", courseIt
   return(d)
 }
 
-
+EmailtoUsername <- function(emailList){
+#extracts usernames from a list of e-mail address
+  ExtractUsername <- function(email){
+    return(substr(email, 1, regexpr("@", email) - 1))
+  }
+  rslt <- sapply(X = emailList, FUN = ExtractUsername, USE.NAMES = FALSE)
+}
