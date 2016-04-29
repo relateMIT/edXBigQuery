@@ -89,4 +89,10 @@ GetProblems <- function(chapterNames = "", seqNames = "", vertNum = "", courseIt
   return(d)
 }
 
-
+EmailtoUsername <- function(emailList){
+#extracts usernames from a list of e-mail address
+  ExtractUsername <- function(email){
+    return(substr(email, 1, regexpr("@", email) - 1))
+  }
+  rslt <- sapply(X = emailList, FUN = ExtractUsername, USE.NAMES = FALSE)
+}
