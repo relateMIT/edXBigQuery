@@ -22,4 +22,8 @@ CalcAssignmentCompletion: Given a list of problems (can either specify a certain
 	
 	Difficulty: If the problem list contains problems that belong to AB experiment, then each student can only complete a fraction of the problems that they actually see. Need to determine the group assignment status of each student, then extract the problems that belonged to that group. Will develop that capability once the group assignment info can be extracted. 
 	
- 
+ Debug:
+	0. see if the output still carries the row.names information.
+    1. test with problems in matrix form
+	2. test with one problem identifyier that is problem_nid
+	3. test with one problem identifyier not nid
