@@ -97,9 +97,10 @@ EmailtoUsername <- function(emailList){
   rslt <- sapply(X = emailList, FUN = ExtractUsername, USE.NAMES = FALSE)
 }
 
-CalcAssignmentCompletion <- function(problems, students, studentInfo = person.course, responseMatrix = responseMatrices$binary, 
+CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE, studentInfo = person.course, responseMatrix = responseMatrices$binary, 
                                      problemIdentifyer = NULL, problemInfo = course.item) {
   #test if response matrix is properly defined
+  #useUserId means that the students variable contains userids not usernames.
   tryCatch(
     if (!class(responseMatrix) == "matrix"){
       print("Response Matrix is not of the data type matrix")
@@ -111,20 +112,25 @@ CalcAssignmentCompletion <- function(problems, students, studentInfo = person.co
     }
     )
   print("Note: This function does not yet handle AB experiments properly")
-  # from studentInfo get userid
-  studentsUserid <- studentInfo$user_id[match(student, studentInfo$username)]
-  #check if any student is found
-  if (sum(!is.na(studentsUserid)) == 0) {
-    print("no students found, check if student names are usernames, not e-mails")
-    return()
+  if (useUserId) {
+    studentsUserid <- students
+  } else {
+    # from studentInfo get userid
+    studentsUserid <- studentInfo$user_id[match(students, studentInfo$username)]
+    #check if any student is found
+    if (sum(!is.na(studentsUserid)) == 0) {
+      print("no students found, check if student names are usernames, not e-mails")
+      return()
+    }
   }
+
   # If problem is a matrix, get problem_nid.
-  if (length(dim(problem)) == 2) {
-    problemNid <- problem$problem_nid
+  if (length(dim(problems)) == 2) {
+    problemNid <- problems$problem_nid
   } else {
     # If problem is a vector, get problem_nid from problemInfo file by problemIdenfier
-    if (length(dim(problem)) == 1){
-      problemNid <- problemInfo$problem_nid[match(problem,problemInfo[,problemIdentifyer])]
+    if (length(dim(problems)) == 1){
+      problemNid <- problemInfo$problem_nid[match(problems,problemInfo[,problemIdentifyer])]
       #check if any problems are found
       if (sum(!is.na(problemNid)) == 0){
         print("no problem found")
@@ -138,10 +144,11 @@ CalcAssignmentCompletion <- function(problems, students, studentInfo = person.co
   
   #count total, correct, completion
   rslt <- apply(X = problemData, MARGIN = 1, FUN = function(x){
-    return(length(x), sum(!is.na(x)), sum(x == 1))
+    return(c(length(x), sum(!is.na(x)), sum(x == 1)))
   })
-  names(rslt) <- c("total", "attempted", "correct")
-  return(rslt)
+  rslt <- t(rslt)
+  colnames(rslt) <- c("total", "attempted", "correct")
+  return(as.data.frame(rslt))
 }
 
 
