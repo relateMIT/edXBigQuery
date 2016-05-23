@@ -97,10 +97,14 @@ EmailtoUsername <- function(emailList){
   rslt <- sapply(X = emailList, FUN = ExtractUsername, USE.NAMES = FALSE)
 }
 
-CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE, studentInfo = person.course, responseMatrix = responseMatrices$binary, 
-                                     problemIdentifyer = NULL, problemInfo = course.item) {
+CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE, 
+                                     studentInfo = person.course, responseMatrix = responseMatrices$binary, 
+                                     problemIdentifyer = NULL, problemInfo = course.item, useItem = FALSE) {
+  # This function outputs the total, attempted and correct number of problems in each assignment for each student.
   #test if response matrix is properly defined
   #useUserId means that the students variable contains userids not usernames.
+  #uses problem_nid, the parameter problems can be a problem matrix
+
   tryCatch(
     if (!class(responseMatrix) == "matrix"){
       print("Response Matrix is not of the data type matrix")
@@ -124,23 +128,41 @@ CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE, stude
     }
   }
 
-  # If problem is a matrix, get problem_nid.
+  # If problem is a matrix, get item_nid.
   if (length(dim(problems)) == 2) {
+    itemNid <- problems$item_nid
     problemNid <- problems$problem_nid
+    problemToItem <- cbind(problemNid, itemNid)
   } else {
-    # If problem is a vector, get problem_nid from problemInfo file by problemIdenfier
+    # If problem is a vector containing problem Idenfiyer, get problem_nid from problemInfo file by problemIdenfier
     if (length(dim(problems)) == 1){
+      itemNid <- problemInfo$item_nid[match(problems,problemInfo[,problemIdentifyer])]
       problemNid <- problemInfo$problem_nid[match(problems,problemInfo[,problemIdentifyer])]
+      problemToItem <- cbind(itemNid, problemNid)
       #check if any problems are found
-      if (sum(!is.na(problemNid)) == 0){
+      if (sum(!is.na(itemNid)) == 0){
         print("no problem found")
         return()
       }
     }
   }
   
-  # Subset the response matrix
-  problemData <- responseMatrix[match(studentsUserid, row.names(responseMatrix)), problemNid]
+  if (useItem){
+    # Subset the response matrix using item data.
+    problemData <- responseMatrix[match(studentsUserid, row.names(responseMatrix)), itemNid]
+  } else{
+    problemData <- matrix()
+    itemData <- responseMatrix[match(studentsUserid, row.names(responseMatrix)), itemNid]
+    if (length(unique(problemNid)) > length(problemNid)){
+      for (eachProblem in unique(problemNid)){
+        itemsInProblem <- problemToItem[ problemToItem$problemNid == eachProblem, itemNid]
+        #Write a function calculating problem data from itemData
+      } 
+
+    }
+
+  }
+  
   
   #count total, correct, completion
   rslt <- apply(X = problemData, MARGIN = 1, FUN = function(x){
@@ -151,4 +173,7 @@ CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE, stude
   return(as.data.frame(rslt))
 }
 
+CombineItemsinttoProblems <- function(itemData){
+  #combine students' item response to problem response.
+}
 

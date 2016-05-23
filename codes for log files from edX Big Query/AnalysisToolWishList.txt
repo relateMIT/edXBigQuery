@@ -27,3 +27,9 @@ CalcAssignmentCompletion: Given a list of problems (can either specify a certain
     1. test with problems in matrix form
 	2. test with one problem identifyier that is problem_nid
 	3. test with one problem identifyier not nid
+	
+Issue:
+
+    The response matrix is item based, the script currently extracts problem_nid instead of item_nid. 
+	First, make the script do item based correctly.
+	Second, add the option allowing items to be combined into problems.
