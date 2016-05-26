@@ -97,14 +97,14 @@ EmailtoUsername <- function(emailList){
   rslt <- sapply(X = emailList, FUN = ExtractUsername, USE.NAMES = FALSE)
 }
 
-CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE, 
+CalcAssignmentCompletion <- function(problems, students, useUserId = FALSE, 
                                      studentInfo = person.course, responseMatrix = responseMatrices$binary, 
-                                     problemIdentifyer = NULL, problemInfo = course.item, useItem = FALSE) {
-  # This function outputs the total, attempted and correct number of problems in each assignment for each student.
+                                     problemIdentifyer = NULL, problemInfo = course.item, isBinary = TRUE) {
+  # This function outputs the total, attempted and correct number of items and problems in each assignment for each student.
   #test if response matrix is properly defined
   #useUserId means that the students variable contains userids not usernames.
   #uses problem_nid, the parameter problems can be a problem matrix
-
+  # Currently only handles situations where "isBinary" is true. 
   tryCatch(
     if (!class(responseMatrix) == "matrix"){
       print("Response Matrix is not of the data type matrix")
@@ -115,7 +115,7 @@ CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE,
       return()
     }
     )
-  print("Note: This function does not yet handle AB experiments properly")
+  print("Note: This function does not yet handle AB experiments properly. Only uses binary response input")
   if (useUserId) {
     studentsUserid <- students
   } else {
@@ -132,13 +132,13 @@ CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE,
   if (length(dim(problems)) == 2) {
     itemNid <- problems$item_nid
     problemNid <- problems$problem_nid
-    problemToItem <- cbind(problemNid, itemNid)
+    problemToItem <- as.data.frame(cbind(problemNid, itemNid))
   } else {
     # If problem is a vector containing problem Idenfiyer, get problem_nid from problemInfo file by problemIdenfier
     if (length(dim(problems)) == 1){
       itemNid <- problemInfo$item_nid[match(problems,problemInfo[,problemIdentifyer])]
       problemNid <- problemInfo$problem_nid[match(problems,problemInfo[,problemIdentifyer])]
-      problemToItem <- cbind(itemNid, problemNid)
+      problemToItem <- as.data.frame(cbind(itemNid, problemNid))
       #check if any problems are found
       if (sum(!is.na(itemNid)) == 0){
         print("no problem found")
@@ -147,33 +147,78 @@ CalcAssignmentCompletion <- function(problems, students, useUserId = TRUE,
     }
   }
   
-  if (useItem){
+  #if (useItem){
     # Subset the response matrix using item data.
-    problemData <- responseMatrix[match(studentsUserid, row.names(responseMatrix)), itemNid]
-  } else{
-    problemData <- matrix()
+  #  problemData <- responseMatrix[match(studentsUserid, row.names(responseMatrix)), itemNid]
+  #} else{
+    #problemData <- matrix()
     itemData <- responseMatrix[match(studentsUserid, row.names(responseMatrix)), itemNid]
-    if (length(unique(problemNid)) > length(problemNid)){
+    if (length(unique(problemNid)) < length(problemNid)){
+      #if problem contains multiple items
       for (eachProblem in unique(problemNid)){
-        itemsInProblem <- problemToItem[ problemToItem$problemNid == eachProblem, itemNid]
+        itemsInProblem.nId <- problemToItem[ problemToItem$problemNid == eachProblem, "itemNid"]
+        itemsInProblem.Data <- itemData[ ,itemsInProblem.nId]
         #Write a function calculating problem data from itemData
+        if(isBinary) {
+          if (is.null(dim(itemsInProblem.Data))){
+            oneProblemData <- itemsInProblem.Data
+          } else {
+            oneProblemData <- apply(X = itemsInProblem.Data, MARGIN = 1, FUN = prod)
+          }
+           assignProblemData <- tryCatch(
+              problemData <- cbind(problemData, oneProblemData),
+            error = function(e) e
+              #{
+              #assign(x = problemData, value = oneProblemData, pos = )
+              #problemData <- oneProblemData
+              #return(problemData)
+              #}
+            )
+          if (inherits(assignProblemData, "error")) {
+            problemData <- oneProblemData
+          }
+        }
       } 
 
+    } else {
+      problemData <- itemData
     }
 
-  }
-  
+  #}
   
   #count total, correct, completion
-  rslt <- apply(X = problemData, MARGIN = 1, FUN = function(x){
-    return(c(length(x), sum(!is.na(x)), sum(x == 1)))
-  })
-  rslt <- t(rslt)
-  colnames(rslt) <- c("total", "attempted", "correct")
+  #handle cases when there's just one item or one problem in the assignment
+  if (class(itemData) == "matrix") {
+    itemrslt <- apply(X = itemData, MARGIN = 1, FUN = function(x){
+      return(c(length(x), sum(!is.na(x)), sum(x == 1, na.rm = TRUE)))
+    })
+    itemrslt <- t(itemrslt)
+    
+  } else {
+    #if only one item
+    itemCorrect <- itemData
+    itemCorrect[is.na(itemCorrect)] <- 0
+    itemrslt <- cbind(rep(1, length(itemData)), as.numeric(!is.na(itemData)), itemCorrect)
+  }
+  colnames(itemrslt) <- c("item.total", "item.attempted", "item.correct")
+  
+  if (class(problemData) == "matrix") {
+    problemrslt <- apply(X = problemData, MARGIN = 1, FUN = function(x){
+      return(c(length(x), sum(!is.na(x)), sum(x == 1, na.rm = TRUE)))
+    })
+    problemrslt <- t(problemrslt)
+  } else {
+    problemCorrect <- problemData
+    problemCorrect[is.na(problemCorrect)] <- 0
+    problemrslt <- cbind(rep(1, length(problemData)), as.numeric(!is.na(problemData)), problemCorrect)
+  }
+
+  colnames(problemrslt) <- c("problem.total", "problem.attempted", "problem.correct")
+  
+  rslt <- cbind(itemrslt, problemrslt)
+  
   return(as.data.frame(rslt))
 }
 
-CombineItemsinttoProblems <- function(itemData){
-  #combine students' item response to problem response.
-}
+
 
