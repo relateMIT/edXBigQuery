@@ -7,7 +7,9 @@ UserinSplit: Gets the group assignment info for each student.
 
 ================Proposed Analysis Tools Waiting To Be Developed=================
 
-GetWhen.nthAttempt: Given a list of problems and a list of students, return a dataframe containing the time at which the nth attempt is made. (Note: whether the attempt is correct can be retrieved from the response matrix.)
+GetWhen.nthAttempt: Given a list of problems and a list of students, return a dataframe containing the time at which the nth attempt is made. (Note: whether the attempt is correct can be retrieved from the response matrix, and added to result)
+
+need: student.nid, problem info for problem-item correspondence, a list of problems.  
 
 
 GetCorrectWhen.OneStudent: Given one problem id and one student id, return a dataframe containing all the attempts the student made on this problem, whether it is correct or not and when each attempt was made.
