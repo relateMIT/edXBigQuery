@@ -33,3 +33,35 @@ Load.File <- function(directory, file){
     
   }
 }
+
+Load.CSV <- function(directory, file){
+  # Function to load a single CSV
+  # Takes two inputs: directory, file
+  # directory is the R-readable filepath to the folder that houses all the CSV log files
+  # file is character string of the name of the specific CSV table necessary e.g. "person_item" NOT "person_item.csv"
+  
+  z <- list.files(directory)
+  # Obtain a character list of all the files within the given directory
+  
+  if (length(z) != 0){
+    # Make sure that the directory is not empty
+    
+    if (!paste(file, ".csv", sep = "") %in% z ){
+      print(paste("WARNING: The file", file, "is missing", sep = " "))
+      return(NULL)
+      # If the file specified is not located within the given directory
+    }
+    
+    else{
+      name <- paste(directory, "\\", file, ".csv", sep = "")
+      print(paste("Currently extracting data for the file: ", file, sep = ""))
+      return(read.csv(name))
+    }
+    
+  }
+  else{
+    print("The given directory is empty or does not exist")
+    return(NULL)
+    
+  }
+}

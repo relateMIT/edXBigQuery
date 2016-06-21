@@ -2,7 +2,7 @@
 # This script contains a single function to find the directory of the datasets #
 ################################################################################
 
-Setdir <- function(){
+Set.Dir <- function(){
   n <- readline(prompt="Enter the desired directory: ")
   # Paste in copied directory of folder from file explorer
   
