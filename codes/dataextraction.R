@@ -10,33 +10,48 @@ library("jsonlite")
 library("base")
 
 ####################################################################################
-######################################### TODO #####################################
+###################################### TODO ########################################
 ####################################################################################
 
 # Replace load.files parameters with something that prompts the user
 # Revise Compare.ItemSets
 
+####################################################################################
+################################# FUNCTIONS ########################################
+####################################################################################
+
+# FOR USER USE:
+# Compare.ProblemTimes - Finds the difference between two different problem attempt instances
+# Compare.ItemTimes - Does the same but for items
+# Compare.ItemSets - WIP
+# Classify.Student -Returns the classification of a student's attempt behavior given two sets of problems
+  # Calls on Check.Item as a subroutine
+# Check.Item - Finds whether or not a specific instance of an item was completed and the correctness of the student's answer
+
+# All other functions are subroutines of the others
 
 ####################################################################################
 ################### Import data sets from local directories ########################
 ####################################################################################
 
-class <- "MITx/8.01r_2"
+source("testset.R")
+# Call Load.All() to initialize all necessary data table variables
 
 source("setdir.R")
 # Obtain the directory setting function from the setdir.R file
 
 print("Please enter the filepath to the folder containing the MITx log files")
-data.source <- Setdir()
+data.source <- Set.Dir()
 # Obtain file path by copy and pasting location of data tables from file explorer - will be used for each Load.File function call
 
-# Set all (initialize) unloaded json tables to be NULL
-
-person.problem <- NULL
-person.item <- NULL
-person.course <- NULL
-problem.check <- NULL
-course.problem <- NULL 
+Set.Class <- function(){
+  # Function to set the global class name, if desired
+  
+  print("Please enter the edX name of the class (e.g. MITx/8.012r_2)")
+  class.global <<- Set.Dir()
+  return(class.global)
+  # class variable is used in every instance of going through the problem_check logs
+}
 
 source("loadfiles.R")
 # Obtain the file loading function from loadfiles.R - to be called whenever a table has to be loaded
@@ -84,16 +99,16 @@ IntegerTime <- function(time){
 ################# Functions for data extraction from log files #####################
 ####################################################################################
 
-Compare.ProblemTimes <- function(id, num1, num2, problems = person.problem, load.files = TRUE){
+Compare.ProblemTimes <- function(id, prob1, prob2, problems = person.problem, load.files = TRUE){
   # Function to retrieve time difference (in seconds) between two completed problems, given a single student
-  # Takes five inputs: id, num1, num2, problems, and load.files
+  # Takes five inputs: id, prob1, prob2, problems, and load.files
   # id - the integer id of the student in question
-  # num1, num2 - the integer ids of the two problems considered
+  # prob1, prob2 - the integer ids of the two problems considered
   # problems - the data set pertaining to problem attempts - defaults to the global variable person.problem
   # load.files - boolean that determines whether or not the user wishes the function to load a file from the directory or not
     # set to TRUE by default - setting it to FALSE allows user to input data set of their choice
   # Returns an integer that specifies the number of seconds elapsed between the completion of each problem
-  # Positive integer output implies that the first problem inputted (num1) was completed after the other (num2)
+  # Positive integer output implies that the first problem inputted (prob1) was completed after the other (prob2)
   
   if(is.null(person.problem) && load.files == TRUE){
     # If the user wished for the script to load files and the default data set has not yet been loaded
@@ -118,25 +133,25 @@ Compare.ProblemTimes <- function(id, num1, num2, problems = person.problem, load
     student.data <- problems[problems$user_id == id,]
     # Select only data pertinent to the student
 
-    if(num1 %in% student.data$problem_nid){
+    if(prob1 %in% student.data$problem_nid){
       # Check to see if the first problem exists within the subset
       
-      if(num2 %in% student.data$problem_nid){
+      if(prob2 %in% student.data$problem_nid){
         # Check to see if the second problem exists within the subset
         
-        p1 <- student.data[student.data$problem_nid == num1,"date"]
-        p2 <- student.data[student.data$problem_nid == num2,"date"]
+        p1 <- student.data[student.data$problem_nid == prob1,"date"]
+        p2 <- student.data[student.data$problem_nid == prob2,"date"]
         # Extract only the columns containing the times at which the problems are completed
         
         return(Get.TimeDiff(p1, p2))
       } else{
         # If the second problem does not exist within the subset
-        print(paste("Invalid problem given/student did not complete problem ", num2, sep = "", collapse = NULL))
+        print(paste("Invalid problem given/student did not complete problem ", prob2, sep = "", collapse = NULL))
         return()
       }
     } else{
       # If the first problem does not exist within the subset  
-      print(paste("Invalid problem given/student did not complete problem ", num1, sep = "", collapse = NULL))
+      print(paste("Invalid problem given/student did not complete problem ", prob1, sep = "", collapse = NULL))
       return()
     }
   } else{
@@ -639,9 +654,9 @@ Classify.Student <- function (student.id, practice, skill.challenges, check = pr
   }
 }
 
-Check.Item <- function(id, item, attempt, check = problem.check, convert.course = person.course, convert.problem = course.problem, load.files = TRUE){
+Check.Item <- function(id, item, attempt, check = problem.check, convert.course = person.course, convert.problem = course.problem, load.files = TRUE, class = class.global){
   # Function to extract the integer time that a particular attempt on a problem was made by a student
-  # Takes seven inputs: student.id, practice, skill.challenges, check, convert.course, convert.problem, and load.files
+  # Takes eight inputs: student.id, practice, skill.challenges, check, convert.course, convert.problem, and load.files, and class
   
   # student.id is the integer value of the student's id number
   # practice is a list of integers comprising of the problem ids of the practice problems
@@ -650,12 +665,19 @@ Check.Item <- function(id, item, attempt, check = problem.check, convert.course 
   # convert.course is the data set that contains the information relating student usernames and ids
   # convert.problem is the data set that contains the information relating problem ids and module ids
   # load.files is a boolean that determines whether or not the user wishes to have the script load the files with the default names for data
+  # class is a string representing the edX designation of the class in question
   
   # Returns a positive or negative integer representing the number of seconds since 1970 the attempt was taken
   # A positive integer represents a correct response, a negative number represents an incorrect response
   
   username <- Convert.Id(id, convert.course, load.files)
   module.id <- Convert.ProblemToModule(item, convert.problem, load.files)
+  
+
+  if(is.null(class)){
+    # If no class is specified / no global class was set - prompt user to input a class
+    class <- Set.Class()
+  }
 
   if(is.null(problem.check) && load.files == TRUE){
     # If the user wished for the script to load files and the default data set has not yet been loaded
@@ -788,7 +810,7 @@ Convert.ProblemToModule <- function(nid, conversion = course.problem, load.files
   } else if(is.null(conversion) && load.files == FALSE){
     # If the user did not supply a data set or the default data was not loaded and the user did not wish to load a file
     
-    print("ERROR: User did not supply dataset/file person_course.json has not yet been loaded. 
+    print("ERROR: User did not supply dataset/file course_problem.json has not yet been loaded. 
           Please call the function again and supply dataset/set load.files = TRUE to call default data set course_problem.json")
     return(NULL)
   }
@@ -804,4 +826,117 @@ Convert.ProblemToModule <- function(nid, conversion = course.problem, load.files
     # Find the corresponding problem id of the problem with the given nid number
     return(problem.id)
   }
+}
+
+Get.DueDate <- function(nid, conversion = course.item, load.files = TRUE){
+  # Function to take a problem nid number and output the due date of the corresponding problem
+  # Takes three parameters - nid, conversion, and load.files
+  
+  # nid is an integer representing the integer nid of the problem in question
+  # conversion is the data table that contains information linking each problem to its due date - defaults to the global course.item
+  # load.files is a boolean that determines whether or not the user wishes to have the script load the files with the default names for data
+  
+  # Returns an integer representing the due date of the problem
+  
+  if(is.null(course.item) && load.files == TRUE){
+    # If the user wished for the script to load files and the default data set has not yet been loaded
+    
+    course.item <<- Load.File(data.source, "course_item")
+    # Load the data file pertaining to items
+    
+    conversion <- course.item
+    # Allow the function to utilize the imported dataset
+  } else if(is.null(conversion) && load.files == FALSE){
+    # If the user did not supply a data set or the default data was not loaded and the user did not wish to load a file
+    
+    print("ERROR: User did not supply dataset/file course_item.json has not yet been loaded. 
+          Please call the function again and supply dataset/set load.files = TRUE to call default data set course_item.json")
+    return(NULL)
+  }
+  
+  if (!nid %in% conversion$problem_nid){
+    print(paste("ERROR: The problem with the id number ", nid, " does not exist.", sep = ""))
+    # Check to see if the problem with the nid number given actually exists
+    return(NULL)
+  }
+  else{
+    due.date <- conversion[conversion$problem_nid == nid, "due_date"]
+    # Extract the data pertaining only to the due dates of the problem in question
+    
+    due.date <- due.date[1]
+    # Consider only the first item in the problem (all other items will have same due date)
+    
+    if (due.date == "null"){
+      # If the problem has no assigned due-date e.g. a practice problem
+      
+      print("ERROR: The called problem does not have a due date")
+      return(NULL)
+    }
+    else{
+      return(TimeInteger(due.date))
+      # Convert the date representation into an integer for use
+    }
+    
+    # Find the corresponding problem id of the problem with the given nid number
+    return(problem.id)
+  }
+}
+
+Get.All.Attempts <- function (student.id, problems, check = problem.check, convert.course = person.course, convert.problem = course.problem, load.files = TRUE){
+  # Function to get all of the times that the students attempts all problems in a given list
+  # Takes six inputs: student.id, problems, check, convert.course, convert.problem, and load.files
+  
+  # student.id is the integer value of the student's id number
+  # problems is a list of integers representing the problem nids
+  # check is the data set that contains the check attempts of the students
+  # convert.course is the data set that contains the information relating student usernames and ids
+  # convert.problem is the data set that contains the information relating problem ids and module ids
+  # load.files is a boolean that determines whether or not the user wishes to have the script load the files with the default names for data
+  
+  # Returns a list of lists of times that student attempt the given problems
+  
+  if(is.null(check) && load.files == TRUE){
+    # If the user wished for the script to load files and the default data set has not yet been loaded
+    
+    problem.check <<- Load.File(data.source, "problem_check")
+    # Load the data file pertaining to items
+    
+    check <- problem.check
+    # Allow the function to utilize the imported dataset
+    
+  } else if(is.null(check) && load.files == FALSE){
+    # If the user did not supply a data set or the default data was not loaded and the user did not wish to load a file
+    
+    print("ERROR: User did not supply dataset/file problem_check.json has not yet been loaded. 
+          Please call the function again and supply dataset/set load.files = TRUE to call default data set problem_check.json")
+    return(NULL)
+  }
+  
+  problem.list <- list()
+  # list to store the times that skill.challenges were completed
+  
+  for (j in problems){
+    
+    attempt <- 1
+    # Check for first attempts of each problem
+    
+    attempt.time <- Check.Item(student.id, j, attempt, check, convert.course, convert.problem, load.files)
+    problem.list[[as.character(j)]] <- attempt.time
+    # Extract the times for the first attempts and store
+    
+    
+    while(!is.null(attempt.time)){
+      # Check to see if the student made further attempts
+          
+      attempt <- attempt + 1
+      # Increment the attempt number to see further attempts
+          
+      attempt.time <-Check.Item(student.id, j, attempt, check, convert.course, convert.problem, load.files)
+      problem.list[[as.character(j)]] = c(problem.list[[as.character(j)]], attempt.time)
+      # Extract the times for the subsequent attempts and store
+    }
+  }
+  
+  return(problem.list)
+  # return the compiled list of attempt times
 }
