@@ -3,6 +3,10 @@
 #This function reads one json table into a dataframe
 #filename is the complete file path that points to the json file data
 #requires the package jsonlite
+#requires the package stringr
+
+#Todo: Write function to check and install required packages.
+
 ReadJsonTable <- function(filename){
   #load jsonlite if it is not already loaded
   if(!("jsonlite" %in% installed.packages()[,1])){
@@ -290,5 +294,104 @@ CalcAssignmentCompletion <- function(problems, students, responseMatrix = respon
   return(as.data.frame(rslt))
 }
 
+
+SplitTest.ProblemsAssigned <- function(courseFlat = course.axis.flatten, courseItem = course.item){
+  #This function finds the problems that are involved in a split test
+  #takes the flattened course axis file (which contains part of the "data" column from the original split test)
+  splitTests <- courseFlat[ !is.na(courseFlat$user_partition_id), ]
+  
+  #here is the function that Alex has written
+  #retuqires stringr package
+  #########************This is a hack that works for one course only!!!*******************#############
+  #########************Need better regexp strategy!!!************############
+  library("stringr")
+  Get.Partitions <- function(course.partition, className = "MITx/8.01r_2/vertical/"){
+    # Function to obtain a list of course partitions
+    # One input, file - the name of the csv file - defaults to course_partitionInfo
+    # Outputs a three-column matrix containing: group_id, module_id, user_partition_id    
+    
+    find.module <- ': "[^"]*"'
+    find.group <- '"[^"]*"[:]'
+    
+    group.ids <- list()
+    module.ids <- list()
+    user.partition.ids <- list()
+    names <- list()
+    
+    for(j in 1:nrow(course.partition)){
+      
+      conversion <- course.partition[j, "group_id_to_child"]
+      # Select the entry in the group_id_to_child column
+      
+      module.matches <- str_extract_all(conversion, find.module, simplify = FALSE)
+      # Find all possible group instances within the selected data
+      
+      user.partition.id <- course.partition[j, "user_partition_id"]
+      # Obtain the user_partition_id for the current test
+      
+      user.partition.ids <- c(user.partition.ids, user.partition.id, user.partition.id)
+      
+      name <- as.character(course.partition[j, "url_name"])
+      # Obtain the name for the current test
+      
+      names <- c(names, name, name)
+      
+      for(k in module.matches){
+        
+        
+        k <- gsub(".*[/]{2}", "", k)
+        k <- gsub('\"', "", k)
+        k <- gsub(className, "", k)
+        # For each such match, remove quotations, and remove all excess characters in front of the double slash
+        
+        group.ids <- c(group.ids,k)
+        
+      }
+      
+      group.matches <- str_extract_all(conversion, find.group)
+      
+      for(k in group.matches){
+        k <- gsub('\"', "", k)
+        k <- gsub(":", "", k)
+        # For each of the group number matches, remove quotations and the stray colon
+        
+        module.ids <- c(module.ids,k)
+      }
+    }
+    
+    
+    output <- list(as.character(names), as.character(module.ids), as.character(group.ids), as.character(user.partition.ids))
+    output <- as.data.frame(output)
+    # Convert to data frame
+    
+    colnames(output) <- c("url_name", "group_id", "module_id", "user.partition_id")
+    # Set Column Names
+    
+    return(output)
+  }
+    
+  parentVerticals <- Get.Partitions(splitTests)
+  
+  
+  #return problem module_id and group assignment.
+  
+  problemsInSplit <- courseFlat[ (courseFlat$is_split == TRUE) & (courseFlat$category == "problem"), ]
+  #Get all the problems involved in split tests
+  
+  problemSplitInfo <- cbind(problemsInSplit[ ,"url_name"], 
+                            parentVerticals[match(problemsInSplit$parent, parentVerticals$module_id) ,
+                                            c("user.partition_id","group_id")])
+  colnames(problemSplitInfo) <- c("url_name", "partition_id", "group_id")
+  #For each problem get split Info
+  
+  itemInSplit <- courseItem[ courseItem$is_split == TRUE, ]
+  
+  itemSplitInfo <- cbind(itemInSplit[,c("item_id","problem_nid","item_nid")], 
+                         problemSplitInfo[match(itemInSplit$problem_id, problemSplitInfo$url_name), 
+                                                       c("partition_id", "group_id")] )
+  #Go from problem to item
+    
+  return(itemSplitInfo)
+}
 
 
