@@ -2,6 +2,8 @@
 # This script contains a single function to load the necessary files for analysis #
 ###################################################################################
 
+library("xlsx")
+
 Load.File <- function(directory, file){
   # Function to load a single JSON table
   # Takes two inputs: directory, file
@@ -64,4 +66,11 @@ Load.CSV <- function(directory, file){
     return(NULL)
     
   }
+}
+
+Read.Gradesheet <- function(file = "gradesheet.xlsx", directory = data.source){
+  # Function to read gradesheet within directory - either given or defaults to the global data.source
+  data.sheet <- read.xlsx(file, 1)
+  
+  return(data.sheet)
 }

@@ -41,7 +41,7 @@ source("setdir.R")
 # Obtain the directory setting function from the setdir.R file
 
 print("Please enter the filepath to the folder containing the MITx log files")
-data.source <- Set.Dir()
+data.source <<- Set.Dir()
 # Obtain file path by copy and pasting location of data tables from file explorer - will be used for each Load.File function call
 
 Set.Class <- function(){
@@ -428,7 +428,7 @@ Classify.Student <- function (student.id, practice, skill.challenges, check = pr
   challenge.list <- list()
   # list to store the times that skill.challenges were completed
   
-  first.correct.challenge <- Inf
+  first.incorrect.challenge <- Inf
   # Variable to store the integer time of the first correct challenge completed
   
   minimum.challenge <- Inf
@@ -480,10 +480,10 @@ Classify.Student <- function (student.id, practice, skill.challenges, check = pr
         correct.number <- correct.number + 1
         # Positive times means correct response
         
-        first.correct.challenge = min(first.correct.challenge, attempt.time)
-        # If the student answered the challenge correctly on the first  attempt
-        
       } else{
+        
+        first.incorrect.challenge = min(abs(first.incorrect.challenge), attempt.time)
+        # If the student answered the challenge incorrectly on the first  attempt
         
         never.wrong <- FALSE
         # The student has failed a first.attempt of a challenge and so does not satisfy the conditions for this variable
@@ -511,8 +511,8 @@ Classify.Student <- function (student.id, practice, skill.challenges, check = pr
               correct.number <- correct.number + 1
               # Positive times means correct response
               
-              first.correct.challenge = min(first.correct.challenge, attempt.time)
-              # If the student answered the challenge correctly on later attempt - still compare to find earliest correct attempt time
+           
+              
             }
           }
         }
@@ -576,10 +576,20 @@ Classify.Student <- function (student.id, practice, skill.challenges, check = pr
   if(practice.number == 0){
     # If the student attempt no practice questions whatsoever
     
-    ##### Classification 0 - Practiceless - NO Practice, All Correct #####
     if(correct.number == length(skill.challenges)){
+      # If the student got all of the skill challenges correct
+      ##### Classification 0.1 - Perfect - NO Practice, All Correct #####
       
-      return("Practiceless")
+      if(never.wrong == TRUE){
+        # If the student got all the problems correct on the first try
+        
+        return("Perfect")
+      }
+      ##### Classification 0.2 - Practiceless - NO Practice, All Correct #####
+      else{
+        return("Practiceless")
+      }  
+   
       
     ##### Classification -1 - Nonexistent - NO Practice, No Attempts on Challenge Either #####
     } else if (challenge.number == 0 ){
@@ -592,7 +602,7 @@ Classify.Student <- function (student.id, practice, skill.challenges, check = pr
       return("Careless")
     }
     
-    ##### Classification 2 - Careless - Only Practice, No Attempts of Skill Challenges #####
+    ##### Classification 2 - Only Practice - Only Practice, No Attempts of Skill Challenges #####
   } else if(challenge.number == 0){
     
     return("Only Practice")
@@ -624,13 +634,13 @@ Classify.Student <- function (student.id, practice, skill.challenges, check = pr
       return("Safe")
     }
     
-  } else if(first.practice > first.correct.challenge){
-    # If the student practiced after completing successfully at least one challenge
+  } else if(first.practice > first.incorrect.challenge){
+    # If the student practiced only after first completing unsuccessfully at least one challenge
     
-    ##### Classification 5.1 - Contained Interspersed   - Practice After First Successful Skil Challenge Attempt, Finish Practice Before Last Challenge Attempt #####
+    ##### Classification 5.1 - Contained - Interspersed   - Practice After First Successful Skil Challenge Attempt, Finish Practice Before Last Challenge Attempt #####
     if(last.practice < maximum.challenge){
       # If the student's practice was contained in between the first successful challenge attempt and the last challenge attempt
-      return("Contained - Interspersed")
+      return("Interspersed.C")
       
     ##### Classification 5.2 - Interspersed   - Practice After First Successful Skil Challenge Attempt, Continue Practice After Last Challenge Attempt #####
       
@@ -638,15 +648,15 @@ Classify.Student <- function (student.id, practice, skill.challenges, check = pr
       return("Interspersed")
     }
     
-  } else if (first.practice < first.correct.challenge){
-    # If the student started practicing after unsuccesfully attempting at least one challenge but before getting any correct
+  } else if (first.practice < first.incorrect.challenge){
+    # If the student started practicing before unsuccesfully attempting at least one challenge but perhaps after getting some correct
     
-    ##### Classification 6.1 - Contained Interspersed   - Practice After Starting Challenges, But Before Any Correct Challenges; Finish Practice Before Last Challenge Attempt #####
+    ##### Classification 6.1 - Contained - Second Thoughts   - Practice After Starting Challenges, But Before Any Correct Challenges; Finish Practice Before Last Challenge Attempt #####
     if(last.practice < maximum.challenge){
 
-      return("Contained - Second Thoughts")
+      return("Second Thoughts.C")
       
-      ##### Classification 6.2 - Interspersed   - Practice After Starting Challenges, But Before Any Correct Challenges; Continue Practice After Last Challenge Attempt #####
+      ##### Classification 6.2 - Second Thoughts   - Practice After Starting Challenges, But Before Any Correct Challenges; Continue Practice After Last Challenge Attempt #####
       
     } else{
       return("Second Thoughts")
@@ -702,12 +712,12 @@ Check.Item <- function(id, item, attempt, check = problem.check, convert.course 
   if(username %in% check$username){
     # Check to see if student exists within dataset
     
-    student.data <- check[check$username == username,]
+    student.data <- check[check$username == username, c("module_id", "time", "success")]
     # Select only data pertinent to the student
   }
   else{
     # If the student does not exist within the dataset
-    print(paste(username, sep = "", collapse = NULL))
+    # print(paste("Student with username", username, "does not exist", sep = "", collapse = NULL))
     return(NULL)
   }
   
@@ -716,23 +726,23 @@ Check.Item <- function(id, item, attempt, check = problem.check, convert.course 
   
   if(module.id %in% student.data$module_id){
     # Check to see if student completed selected item
-    item.data <- student.data[student.data$module_id == module.id,]
+    item.data <- student.data[student.data$module_id == module.id, c("time", "success")]
   }
   
   else{
     # If the student did not complete the item or if the item does not exist
-    print(paste("Item with name ", module.id," does not exist or student did not complete it", sep = "", collapse = NULL))
+    # print(paste("Item with name ", module.id," does not exist or student did not complete it", sep = "", collapse = NULL))
     return(NULL)
   }
   
   
   if(nrow(item.data) < attempt){
     # Check to see if the student participated in the given number of attempts
-    print(paste("The student did not complete ", attempt," attempts of the item", sep = "", collapse = NULL))
+    # print(paste("The student did not complete ", attempt," attempts of the item", sep = "", collapse = NULL))
     return(NULL)
   }
   else{
-    time <- item.data[attempt,"time"]
+    time <- item.data[attempt, "time"]
     time <- (TimeInteger(time))
     # Convert the date representation into an integer
     
@@ -744,6 +754,131 @@ Check.Item <- function(id, item, attempt, check = problem.check, convert.course 
     return(time)
   }
 }
+####################################################################################
+######################## AB Experiment Functions ###################################
+####################################################################################
+
+Classify.AB <- function(test.breakdown = split.test, grades = gradesheet, conversion = person.course, course.i = course.item, person.i = person.item, load.files = TRUE){
+  # Function to retrieve the group and partitiod ids of every student given an input containing the relevant breakdown per problem
+  # Takes 6 inputs: test.breakdown, grades, conversion, course.i, person.i, and load.Files
+
+  # test.breakdown is the file containing the information detailing the partition/group ids of each problem
+  # grades is the gradesheet of the course containing the ids of each student
+  # conversion is the data set that contains the information relating student usernames and ids - defaults to the global person.course
+  # course.i is the data set that contains the information detailing all items in the course - defaults to the global course.item
+  # person.i is the data set that contains the information relating individual students and items - defaults to the global person.item
+  # load.files is a boolean that determines whether or not the user wishes to have the script load the files with the default names for data
+
+  # Returns a list of matrices for each student - the matrices contain the group and partition ids for the corresponding students
+
+  if(is.null(person.item) && load.files == TRUE){
+    # If the user wished for the script to load files and the default data set has not yet been loaded for person.item
+  
+    person.item <<- Load.File(data.source, "person_item")
+    # Load the data file pertaining to items
+  
+    person.i <- person.item
+    # Allow the function to utilize the imported dataset
+  
+  } else if(is.null(person.i) && load.files == FALSE){
+    # If the user did not supply a data set or the default data was not loaded and the user did not wish to load a file
+  
+    print("ERROR: User did not supply dataset/file person_item.json has not yet been loaded. 
+          Please call the function again and supply dataset/set load.files = TRUE to call default data set person_item.json")
+    return(NULL)
+  }
+  
+  if(is.null(course.item) && load.files == TRUE){
+    # If the user wished for the script to load files and the default data set has not yet been loaded for course.item
+    
+    course.item <<- Load.File(data.source, "course_item")
+    # Load the data file pertaining to items
+    
+    course.i <- course.item
+    # Allow the function to utilize the imported dataset
+    
+  } else if(is.null(course.i) && load.files == FALSE){
+    # If the user did not supply a data set or the default data was not loaded and the user did not wish to load a file
+    
+    print("ERROR: User did not supply dataset/file person_item.json has not yet been loaded. 
+          Please call the function again and supply dataset/set load.files = TRUE to call default data set person_item.json")
+    return(NULL)
+  }
+  if (is.null(grades) && load.files == TRUE){
+    gradesheet <<- Read.Gradesheet()
+    grades <- gradesheet
+  } else if(is.null(grades) && load.files == FALSE){
+    # If the user did not supply a data set or the default data was not loaded and the user did not wish to load a file
+    
+    print("ERROR: User did not supply dataset/file of the course gradesheet has not yet been loaded. 
+          Please call the function again and supply dataset or set load.files = TRUE to call default data set gradesheet.xlsx")
+    return(NULL)
+  }
+  if (is.null(test.breakdown)  & load.files == TRUE){
+    split.test <<- Load.CSV(data.source, "splitTest_itemAssigned")
+    test.breakdown <- split.test
+  } else if(is.null(test.breakdown) && load.files == FALSE){
+    # If the user did not supply a data set or the default data was not loaded and the user did not wish to load a file
+    
+    print("ERROR: User did not supply dataset/file containing the AB experiment split has not yet been loaded. 
+          Please call the function again and supply dataset/set load.files = TRUE to call default data set splitTest_itemAssigned.CSV")
+    return(NULL)
+  }
+  source("ExtractingDataFromTables.R")
+  usernames <- EmailtoUsername(gradesheet$Username)
+  # Takes the gradesheet and extracts all the usernames of the students in the course
+  
+  
+  id.list <- list()
+  # List to contain the individual ids of the students
+  
+  for (username in usernames){
+    # Convert all of the usernames from the gradesheet to integer ids for use 
+    id.list <- c(id.list, Convert.Username(username, conversion, load.files))
+  }
+  
+  source("createResponseMatrix_function.R")
+  response.matrix <- Create.ResponseMatrix(conversion, course.i, person.i, FALSE)
+  # Creates a nonbinary matrix that contains information to determine whether or not a student completed any of the problems relevant to the AB experiments
+  
+  classification.list <- list()
+  # List to contain the matrices for the AB classification for each students
+  for (student.id in id.list){
+    
+    student.groups <- matrix(ncol = 2)
+    # Initialize matrix to contain pairs of partition/group ids
+    student.responses <- response.matrix[student.id,]
+    # Find the row of the response matrix corresponding to the relevant student
+    
+    for(j in test.breakdown$item_nid){
+      # Check each item in the AB conversion sheet - esp. if a student was assigned to a set of problems but only completed some
+      if(!is.na(student.responses[j])){
+        # If the student actually completed or attempted the relevant problem
+        identifier <- test.breakdown[test.breakdown$item_nid == j, c("partition_id", "group_id")]
+        # The partition_id, group_id pairing to identify a problem and thus students
+        if(!identifier[1] %in% student.groups[,1]){
+          # If the partition id has already been placed in the student matrix - prevent duplicate entries in the matrices
+          if(all(is.na(student.groups))){
+            # If the matrix for the student is still empty (i.e. no classification has been given)
+            student.groups[1,] <- as.numeric(as.list(identifier))
+            # Fill the empty matrix's first row
+          } else{
+            # If some classification has already given to the student
+            rbind(student.groups, as.numeric(as.list(identifier)))
+            # Append on to the matrix
+          }
+        }
+      }
+    }
+    
+    classification.list[[student.id]] <- student.groups
+    # Append the student matrix to the classification list
+    
+  }
+  return(classification.list)
+  # Return the list of matrices
+}
+
 
 ####################################################################################
 ######################## Miscellaneous Functions ###################################
@@ -779,11 +914,52 @@ Convert.Id <- function(id, conversion = person.course, load.files = TRUE){
   if (!id %in% conversion$user_id){
     print(paste("ERROR: The student with the id number ", id, " does not exist.", sep = ""))
     # Check to see if the student with the id number given actually exists
+    return(NULL)
   }
   else{
     username <- conversion[conversion$user_id == id, "username"]
     # Find the corresponding username of the person with the given user id number
     return(username)
+  }
+  
+}
+
+Convert.Username <- function(username, conversion = person.course, load.files = TRUE){
+  # Function to take a student username and output the username of the corresponding student
+  # Takes three parameters - username, conversion, and load.files
+  
+  # id is an integer representing the integer id number of the student in question
+  # conversion is the data table that contains information linking each student id to a username - defaults to the global person.course
+  # load.files is a boolean that determines whether or not the user wishes to have the script load the files with the default names for data
+  
+  # Returns an integer representing the id number of the student
+  
+  if(is.null(person.course) && load.files == TRUE){
+    # If the user wished for the script to load files and the default data set has not yet been loaded
+    
+    person.course <<- Load.File(data.source, "person_course")
+    # Load the data file pertaining to items
+    
+    conversion <- person.course
+    # Allow the function to utilize the imported dataset
+    
+  } else if(is.null(conversion) && load.files == FALSE){
+    # If the user did not supply a data set or the default data was not loaded and the user did not wish to load a file
+    
+    print("ERROR: User did not supply dataset/file person_course.json has not yet been loaded. 
+          Please call the function again and supply dataset/set load.files = TRUE to call default data set person_course.json")
+    return(NULL)
+  }
+  
+  if (!username %in% conversion$username){
+    print(paste("ERROR: The student with the username ", username, " does not exist.", sep = ""))
+    return(NULL)
+    # Check to see if the student with the username given actually exists
+  }
+  else{
+    id <- conversion[conversion$username == username, "user_id"]
+    # Find the corresponding id of the person with the given username
+    return(id)
   }
   
 }
@@ -939,4 +1115,52 @@ Get.All.Attempts <- function (student.id, problems, check = problem.check, conve
   
   return(problem.list)
   # return the compiled list of attempt times
+}
+
+Get.Attempt.Distribution <- function(student.id, practices, challenge, check = problem.check, convert.course = person.course, convert.problem = course.problem, load.files = TRUE){
+  # Function to get a distribution of attempts for a student regarding a single problem
+  
+  challenge.times <- Get.All.Attempts(student.id, challenge, check, convert.course, convert.problem, load.files)
+
+  
+  if(length(challenge.times) == 0){
+    # If the student never completed the challenge
+    return(NULL)
+  } else{
+
+    attempts = length(challenge.times[[1]])
+
+    if (challenge.times[[1]][attempts] < 0){
+      # If the student never succesffuly completed the challenge - i.e. their last attempt was incorrect
+      return("Unsuccessful")
+    } else if (attempts == 1){
+      # If the student completed the challenge succesfully on the first try
+      return("Perfect")
+    }
+    else {
+      practice.times <- Get.All.Attempts(student.id, practices, check, convert.course, convert.problem, load.files)
+      # Get all the times practice questions were attempted
+      
+      practice.start <- NULL
+      # Variable to store the number of the challenge attempt after which practice (if any) was attempted
+      
+      for (j in 2:attempts){
+        
+        for (k in practice.times){
+          
+          if(abs(k) <= challenge.times[[1]][j] && abs(k) >= challenge.times[[1]][j-1]){
+            if(is.null(practice.start)){
+              practice.start <- j-1
+            }
+          }
+        }
+      }
+      
+      if(is.null(practice.start)){
+        return(c("Practiceless", attempts))
+      } else{
+        return(c(practice.start, attempts))
+      }
+    }
+  }
 }
