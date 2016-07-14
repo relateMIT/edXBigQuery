@@ -12,10 +12,13 @@ data.source <- Set.Dir()
 
 source("loadfiles.R")
 
-Get.Partitions <- function(file = "course_partitionInfo"){
+Get.Partitions <- function(file = "course_partitionInfo", class = "MITx/8.01r_2"){
   # Function to obtain a list of course partitions
   # One input, file - the name of the csv file - defaults to course_partitionInfo
   # Outputs a three-column matrix containing: group_id, module_id, user_partition_id
+  
+  class <- paste(class,"/", sep = "")
+  # Add trailing dash to aid removal of class from data
   
   course.partition <- Load.CSV(data.source, file)
   # Load the relevant file
@@ -51,6 +54,7 @@ Get.Partitions <- function(file = "course_partitionInfo"){
       
       k <- gsub(".*[/]{2}", "", k)
       k <- gsub('\"', "", k)
+      k <- gsub(class, "", k)
       # For each such match, remove quotations, and remove all excess characters in front of the double slash
       
       group.ids <- c(group.ids,k)

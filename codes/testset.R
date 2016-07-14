@@ -9,5 +9,7 @@ Load.All <- function(){
   person.course <<- NULL
   person.item <<- NULL
   class.global <<- "MITx/8.01r_2"
+  split.test <<- NULL
+  gradesheet <<- NULL
   
 }
