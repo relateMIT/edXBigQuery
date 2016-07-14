@@ -395,3 +395,13 @@ SplitTest.ProblemsAssigned <- function(courseFlat = course.axis.flatten, courseI
 }
 
 
+FlattenCourseAxis <- function(outputName, courseAxis = course.axis, dataCols = NA){
+  #flattens the course axis file
+  #lets the user choose which columns to include in the output data frame.
+  if (is.na(dataCols)[1]) {
+    courseAxis.flattened <- data.frame(courseAxis[, !(names(courseAxis) == "data")], courseAxis$data)
+  } else {
+    courseAxis.flattened <- data.frame(courseAxis[, !(names(courseAxis) == "data")], courseAxis$data[,dataCols])
+  }
+  assign(x = outputName, value = courseAxis.flattened, envir = globalenv())
+}
