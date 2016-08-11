@@ -1,0 +1,3 @@
+GetProblems: gets information for problems (items/inputfield) in a given course unit (chapter(s)/sequential(s)/vertical(s)).
+
+EmailtoUsername: extracts usernames from a list of e-mail addresses (string before @)

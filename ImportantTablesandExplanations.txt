@@ -1,0 +1,31 @@
+# This folder contains tables from the RELATE's BigQuery.
+# File format is 'newline-delimited JSON'. 
+# Files can be read into R dataframe using the following R command: 
+library(jsonlite)
+d <- fromJSON(sprintf("[%s]", paste(readLines("MITx__8_01r_2__2015_Fall_logs-tracklog_20150831.json"), collapse=",")))
+
+
+#The tables and descriptions
+
+chapter_grades: each user's total points by (each) chapter. Use userid
+
+course_axis: ordered course tree.
+
+course_item: metadata for an item(input field), no student specific information.
+
+person_item: contains when each student accessed each item, how many attemps and whether he/she is correct. Basically the response matrix. The time is presumably the problem access time, not very useful.
+
+person_problem: very similar to the previous one. Maybe problems are graded and items includes both graded and ungraded?
+
+problem_analysis: THIS IS THE USEFUL ONE! When does each student make each attempt to each problem, and what are the attempts. Use url_name to link back to course tree.
+
+video_axis: video name, video_id for each video, as well as the chapter that it is in.
+
+video_stats: (what's the difference between videos_viewed and videos watched?) The frequency of each video being viewed.
+
+video_stats_day: I suspect that this is the day in which the student first accessed the video
+
+person_course: A fairly silly thing is that many of the columns containing personal information are blank, such as roll.
+
+
+##################################################################
